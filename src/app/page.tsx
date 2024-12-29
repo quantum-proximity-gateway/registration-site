@@ -1,5 +1,11 @@
 'use client';
 
+declare global {
+  interface Navigator {
+    serial: any;
+  }
+}
+
 import { Button, Input, Stack } from "@chakra-ui/react";
 import { useState } from "react";
 import '@fontsource/ibm-plex-sans';
