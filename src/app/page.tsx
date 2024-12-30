@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 declare global {
   interface Navigator {
@@ -10,8 +10,8 @@ import { Button, Input, Stack } from "@chakra-ui/react";
 import { useState } from "react";
 import '@fontsource/ibm-plex-sans';
 import axios from 'axios';
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 async function connectSerial() { // Connect to ESP32 (cu.wchuusbserial)
   const log = document.getElementById('target');
@@ -21,14 +21,14 @@ async function connectSerial() { // Connect to ESP32 (cu.wchuusbserial)
     await port.open({ baudRate: 9600 });
     
     const decoder = new TextDecoderStream(); // Decodes incoming data from ESP32
-    
     port.readable.pipeTo(decoder.writable);
 
-    const inputStream = decoder.readable;
-    const reader = inputStream.getReader();
+    const reader = decoder.readable.getReader();
     let macAddress = "";
+
     while (true) {
       const { value, done } = await reader.read();
+      
       if (value) {
         console.log('[readLoop] value:', value, "length:", value.length);
         if (value.length == 19) { // MAC Address are 17 characters long + 2 newlines
@@ -37,15 +37,16 @@ async function connectSerial() { // Connect to ESP32 (cu.wchuusbserial)
           break;
         }
       }
+
       if (done) {
         console.log('[readLoop] DONE', done);
         reader.releaseLock();
         break;
       }
     }
+
     return macAddress;
 
-  
   } catch (error) {
     console.error('There was an error reading the data:', error);
   }
@@ -82,7 +83,6 @@ export default function Home() {
       alert("Web Serial API not supported in this browser, install the latest version of Chrome or Edge");
     }
   }
-
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-2" style={{ fontFamily: 'IBM Plex Sans, sans-serif' }}>
