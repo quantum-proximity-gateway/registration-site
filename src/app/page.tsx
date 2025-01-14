@@ -58,14 +58,14 @@ async function connectSerial() { // Connect to ESP32 (cu.wchuusbserial)
 }
 
 export default function Home() {
-  const [macAddress, setMacAddress] = useState("");
+  const [mac_address, setMacAddress] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [connected, setConnected] = useState(false);
 
   function handleRegister() {
     axios.post(`${API_URL}/register`, {
-      macAddress,
+      mac_address,
       username,
       password
     }).then((res) => {
@@ -102,7 +102,7 @@ export default function Home() {
           placeholder="MAC Address"
           variant="flushed"
           autoComplete="off"
-          value={macAddress}
+          value={mac_address}
           readOnly
         />
         {!connected && (
