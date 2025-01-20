@@ -63,7 +63,13 @@ export default function Home() {
   const [connected, setConnected] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const [isFading, setIsFading] = useState(false);
-  const [currentAlert, setCurrentAlert] = useState("");
+  const [alertClass, setAlertClass] = useState('');
+  interface AlertType {
+    status: "success" | "error" | "info" | "warning" | "neutral";
+    title: string;
+  }
+
+  const [currentAlert, setCurrentAlert] = useState<AlertType | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -81,17 +87,21 @@ export default function Home() {
       username,
       password
     }).then((res) => {
-      alert("Device registered successfully");
+      setAlertClass('fadeIn');
+      setCurrentAlert({status: "success", title: "Device registered"});
     }).catch((err) => {
       if (err.response.status == 409) {
-        setCurrentAlert("Device already registered");
+        setAlertClass('fadeIn');
+        setCurrentAlert({status: "error", title: "Device already registered"});
       } else {
-        setCurrentAlert("Error registering device");
+        setAlertClass('fadeIn');
+        setCurrentAlert({status: "error", title: "Error registering device"});
       }
-      setTimeout(() => {
-        setCurrentAlert("");
-      }, 2000);
     });
+    setTimeout(() => {
+      setAlertClass('fadeOut');
+    }
+    , 2000);
   }
 
   function handleConnect() {
@@ -140,14 +150,14 @@ export default function Home() {
       {!showWelcome && (
       <div className="flex flex-col items-center justify-center relative" style={{ fontFamily: 'IBM Plex Sans, sans-serif' }}>
         {currentAlert && (
-          <div style={{ width: '50%', padding: '1rem', position: 'absolute', top: '1rem' }}>
-            <Alert
-              status="error"
-              title={currentAlert}
-            />
-          </div>
+          <div className={`alert-container ${alertClass}`} style={{ width: '50%', padding: '1rem', position: 'absolute', top: '1rem' }}>
+          <Alert
+            status={currentAlert.status}
+            title={currentAlert.title}
+          />
+        </div>
         )}
-      <div className="flex flex-col items-center justify-center min-h-screen py-2" style={{ fontFamily: 'IBM Plex Sans, sans-serif' }}>
+      <div className="flex flex-col items-center justify-center min-h-screen py-2 fadeIn" style={{ fontFamily: 'IBM Plex Sans, sans-serif' }}>
 
       
       <h1 className="text-4xl">Device Registration</h1>
