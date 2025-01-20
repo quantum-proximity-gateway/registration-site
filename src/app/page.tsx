@@ -1,13 +1,12 @@
 "use client";
-
 declare global {
   interface Navigator {
     serial: any;
   }
 }
-
 import { Button, Input, Stack } from "@chakra-ui/react";
-import { useState } from "react";
+import { Alert } from "@/components/ui/alert";
+import { useState, useEffect } from "react";
 import '@fontsource/ibm-plex-sans';
 import axios from 'axios';
 
@@ -62,6 +61,19 @@ export default function Home() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [connected, setConnected] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [isFading, setIsFading] = useState(false);
+  const [currentAlert, setCurrentAlert] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsFading(true);
+      setTimeout(() => {
+        setShowWelcome(false);
+      }, 1000); // match fadeOut duration
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
 
   function handleRegister() {
     axios.post(`${API_URL}/register`, {
@@ -71,8 +83,14 @@ export default function Home() {
     }).then((res) => {
       alert("Device registered successfully");
     }).catch((err) => {
-      alert("Failed to register device");
-      console.error(err);
+      if (err.response.status == 409) {
+        setCurrentAlert("Device already registered");
+      } else {
+        setCurrentAlert("Error registering device");
+      }
+      setTimeout(() => {
+        setCurrentAlert("");
+      }, 2000);
     });
   }
 
@@ -92,7 +110,46 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-2" style={{ fontFamily: 'IBM Plex Sans, sans-serif' }}>
+    <>
+      <style jsx>{`
+        .fadeIn {
+          animation: fadeIn 1s ease-in forwards;
+        }
+        .fadeOut {
+          animation: fadeOut 1s ease-out forwards;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes fadeOut {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+      `}</style>
+      {showWelcome && (
+        <div
+          className={`flex flex-col items-center justify-center min-h-screen py-2 ${
+            isFading ? 'fadeOut' : 'fadeIn'
+          }`}
+          style={{ fontFamily: 'IBM Plex Sans, sans-serif' }}
+        >
+          <h1 className="text-4xl">Quantum Proximity Gateway - Registration</h1>
+        </div>
+      )}
+      {!showWelcome && (
+      <div className="flex flex-col items-center justify-center relative" style={{ fontFamily: 'IBM Plex Sans, sans-serif' }}>
+        {currentAlert && (
+          <div style={{ width: '50%', padding: '1rem', position: 'absolute', top: '1rem' }}>
+            <Alert
+              status="error"
+              title={currentAlert}
+            />
+          </div>
+        )}
+      <div className="flex flex-col items-center justify-center min-h-screen py-2" style={{ fontFamily: 'IBM Plex Sans, sans-serif' }}>
+
+      
       <h1 className="text-4xl">Device Registration</h1>
       <Stack className="sm:p-20">
         {/* MAC address is read-only, so we can turn off autocomplete */}
@@ -139,5 +196,8 @@ export default function Home() {
         </Button>
       </Stack>
     </div>
+    </div>
+    )}
+    </>
   );
 }
