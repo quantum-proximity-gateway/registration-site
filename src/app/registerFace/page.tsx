@@ -15,6 +15,10 @@ const RegisterFace = () => {
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
     const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
 
+
+    // Final animation
+    const [showGoodbye, setShowGoodbye] = useState(false);
+
     useEffect(() => {
         if (!record) return;
 
@@ -74,6 +78,7 @@ const RegisterFace = () => {
   
         if (response.status === 201) {
           console.log('Video uploaded successfully');
+          setShowGoodbye(true);
         } else {
           console.error('Failed to upload video');
         }
@@ -84,7 +89,17 @@ const RegisterFace = () => {
 
     return (
     <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" height="100vh" fontFamily="IBM Plex Sans, sans-serif">
-      {!record ? (
+
+      {showGoodbye && (
+        <div
+        className={`flex flex-col items-center justify-center min-h-screen py-2 fadeIn`}
+        style={{ fontFamily: 'IBM Plex Sans, sans-serif' }}
+        >
+          <Text as="h1" fontSize="3xl" mb={2}>Thank you for registering!</Text>
+          <Text as="h2" fontSize="2xl">You may now approach any QPG enabled device with your key.</Text>
+        </div>
+      )}
+      {!record && !showGoodbye ? (
         <>
           <Text as="h1" fontSize="4xl" mb={4}>Face Registration</Text>
           <Text as="h2" fontSize="xl" mb={4}>Look into the camera for 5 seconds</Text>

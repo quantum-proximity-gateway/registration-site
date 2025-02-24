@@ -121,22 +121,6 @@ export default function Home() {
 
   return (
     <>
-      <style jsx>{`
-        .fadeIn {
-          animation: fadeIn 1s ease-in forwards;
-        }
-        .fadeOut {
-          animation: fadeOut 1s ease-out forwards;
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes fadeOut {
-          from { opacity: 1; }
-          to { opacity: 0; }
-        }
-      `}</style>
       {showWelcome && (
         <div
           className={`flex flex-col items-center justify-center min-h-screen py-2 ${
