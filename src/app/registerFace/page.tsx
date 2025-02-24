@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import  {Button, Text, Box} from "@chakra-ui/react";
 import axios from 'axios';

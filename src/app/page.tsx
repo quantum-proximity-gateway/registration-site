@@ -9,6 +9,7 @@ import { Alert } from "@/components/ui/alert";
 import { useState, useEffect } from "react";
 import '@fontsource/ibm-plex-sans';
 import axios from 'axios';
+import { useRouter } from 'next/navigation'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -64,6 +65,9 @@ export default function Home() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [isFading, setIsFading] = useState(false);
   const [alertClass, setAlertClass] = useState('');
+
+  const router = useRouter();
+
   interface AlertType {
     status: "success" | "error" | "info" | "warning" | "neutral";
     title: string;
@@ -89,7 +93,9 @@ export default function Home() {
     }).then((res) => {
       setAlertClass('fadeIn');
       setCurrentAlert({status: "success", title: "Device registered"});
+      router.push(`/registerFace?mac_address=${mac_address}`);
     }).catch((err) => {
+      console.log(err)
       if (err.response.status == 409) {
         setAlertClass('fadeIn');
         setCurrentAlert({status: "error", title: "Device already registered"});
