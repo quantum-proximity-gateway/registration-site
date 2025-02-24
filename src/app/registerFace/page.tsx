@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import  {Button, Text, Box} from "@chakra-ui/react";
+import axios from 'axios';
 
 const RegisterFace = () => {
     const searchParams = useSearchParams();
@@ -58,26 +59,27 @@ const RegisterFace = () => {
     }, [record]);
 
     const handleSubmit = async () => {
-        if (!videoBlob) return;
+      if (!videoBlob) return;
   
-        const formData = new FormData();
-        formData.append('video', videoBlob, 'recorded-video.webm');
-        formData.append('mac_address', mac_address as string);
-    
-        try {
-          const response = await fetch('YOUR_SERVER_URL', {
-            method: 'POST',
-            body: formData,
-          });
-    
-          if (response.ok) {
-            console.log('Video uploaded successfully');
-          } else {
-            console.error('Failed to upload video');
+      const formData = new FormData();
+      formData.append('video', videoBlob, 'recorded-video.webm');
+      formData.append('mac_address', mac_address as string);
+  
+      try {
+        const response = await axios.post('http://127.0.0.1:8000/registration/faceRec', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
           }
-        } catch (error) {
-          console.error('Error uploading video:', error);
+        });
+  
+        if (response.status === 201) {
+          console.log('Video uploaded successfully');
+        } else {
+          console.error('Failed to upload video');
         }
+      } catch (error) {
+        console.error('Error uploading video:', error);
+      }
     };
 
     return (
@@ -99,7 +101,7 @@ const RegisterFace = () => {
           </Button>
           {recorded ? (
             <>
-            <Button 
+            <Button
               onClick={handleSubmit}
               colorScheme="teal" 
               color="green.300"
