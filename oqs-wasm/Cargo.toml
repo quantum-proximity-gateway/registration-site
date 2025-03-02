@@ -1,0 +1,15 @@
+[package]
+name = "oqs-wasm"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+base64 = "0.22.1"
+console_error_panic_hook = "0.1.7"
+oqs = {version = "0.10.1"}
+serde = { version = "1.0", features = ["derive"] }
+serde-wasm-bindgen = "0.6.5"
+wasm-bindgen = "0.2.100"
+
+[lib]
+crate-type = ["cdylib"]
