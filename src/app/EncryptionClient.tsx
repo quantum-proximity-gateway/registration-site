@@ -24,7 +24,7 @@ export class EncryptionClient {
     }
 
     async initialize() {
-        this.SHARED_SECRET = await this.genClientSecret();
+        await this.genClientSecret();
     }
 
     base64ToUint8Array(base64: string): Uint8Array {
@@ -45,7 +45,7 @@ export class EncryptionClient {
         return btoa(binaryString);
     }
 
-    async genClientSecret(): Promise<Uint8Array> {
+    async genClientSecret(): Promise<void> {
         const data = { client_id: String(this.CLIENT_ID) };
         let pk: Uint8Array = new Uint8Array();
         await axios.post(`${API_URL}/kem/initiate`, data)
@@ -70,7 +70,7 @@ export class EncryptionClient {
             console.error('There was an error!', error);
         });
 
-        return shared_secret;
+        this.SHARED_SECRET = shared_secret;
     }
 
     encryptData(data: string): EncryptedData {
@@ -88,11 +88,16 @@ export class EncryptionClient {
     }
 
     decryptData(data: EncryptedData): string {
-        const key = this.SHARED_SECRET;
-        const nonce = this.base64ToUint8Array(data.nonce_b64);
-        const aes = gcm(key, nonce);
-        const plaintext = aes.decrypt(this.base64ToUint8Array(data.ciphertext_b64))
-        return new TextDecoder().decode(plaintext);
+        try {
+            const key = this.SHARED_SECRET;
+            const nonce = this.base64ToUint8Array(data.nonce_b64);
+            const aes = gcm(key, nonce);
+            const plaintext = aes.decrypt(this.base64ToUint8Array(data.ciphertext_b64));
+            return new TextDecoder().decode(plaintext);
+        } catch (error) {
+            console.error('Decryption error:', error);
+            throw new Error('Failed to decrypt data');
+        }
     }
 
 }
