@@ -88,11 +88,14 @@ export default function Home() {
   }, []);
 
   function handleRegister() {
-    axios.post(`${API_URL}/register`, {
+    let plaintext = {
       mac_address,
       username,
       password
-    }).then((res) => {
+    }
+
+    let data = encryptionClient.encryptData(JSON.stringify(plaintext));
+    axios.post(`${API_URL}/register`, data).then((res) => {
       setAlertClass('fadeIn');
       setCurrentAlert({status: "success", title: "Device registered"});
       router.push(`/registerFace?mac_address=${mac_address}`);
