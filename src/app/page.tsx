@@ -94,6 +94,10 @@ export default function Home() {
   }, []);
 
   function handleRegister() {
+    if (mac_address == "") {
+      alert("MAC Address is empty. Please connect your ESP32 key to your laptop.");
+      return;
+    }
     let plaintext = {
       mac_address,
       username,
@@ -107,6 +111,7 @@ export default function Home() {
       setAlertClass('fadeIn');
       setCurrentAlert({status: "success", title: "Device registered"});
       router.push(`/registerFace?mac_address=${mac_address}`);
+    
     }).catch((err) => {
       console.log(err)
       if (err.response.status == 409) {
