@@ -87,4 +87,12 @@ export class EncryptionClient {
         }
     }
 
+    decryptData(data: EncryptedData): string {
+        const key = this.SHARED_SECRET;
+        const nonce = this.base64ToUint8Array(data.nonce_b64);
+        const aes = gcm(key, nonce);
+        const plaintext = aes.decrypt(this.base64ToUint8Array(data.ciphertext_b64))
+        return new TextDecoder().decode(plaintext);
+    }
+
 }
