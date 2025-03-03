@@ -16,6 +16,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const CLIENT_ID = uuidv4()
 
 
+
 function base64ToUint8Array(base64: string) {
   const binaryString = atob(base64);
   const len = binaryString.length;
@@ -46,9 +47,17 @@ async function gen_client_secret() {
     console.error('There was an error!', error);
   });
   const sender = new MlKem512()
-  const [ciphertext, shared_secret] = await sender.encap(pk);
+  const [ciphertext, shared_secret] = await sender.encap(pk); // Save shared secret somewhere
 
   const ciphertext_b64 = uint8ArrayToBase64(ciphertext);
+  const complete_data = { client_id: String(CLIENT_ID), ciphertext_b64: ciphertext_b64 }
+  await axios.post(`${API_URL}/kem/complete`, complete_data)
+  .then(response => {
+    console.log(response.data)
+  })
+  .catch(error => {
+    console.error('There was an error!', error);
+  });
 }
 
 async function connectSerial() { // Connect to ESP32 (cu.wchuusbserial)
