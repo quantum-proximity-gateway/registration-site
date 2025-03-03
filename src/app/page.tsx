@@ -10,8 +10,46 @@ import { useState, useEffect } from "react";
 import '@fontsource/ibm-plex-sans';
 import axios from 'axios';
 import { useRouter } from 'next/navigation'
-
+import {MlKem512} from 'mlkem';
+import {v4 as uuidv4} from 'uuid';
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const CLIENT_ID = uuidv4()
+
+
+function base64ToUint8Array(base64: string) {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function uint8ArrayToBase64(uint8Array: Uint8Array) {
+  let binaryString = '';
+  for (let i = 0; i < uint8Array.length; i++) {
+    binaryString += String.fromCharCode(uint8Array[i]);
+  }
+  return btoa(binaryString);
+}
+
+async function gen_client_secret() {
+  const data = { client_id: String(CLIENT_ID) };
+  let pk: Uint8Array = new Uint8Array();
+  await axios.post(`${API_URL}/kem/initiate`, data)
+  .then(response => {
+    const public_key_b64 = response.data.public_key_b64;
+    pk = base64ToUint8Array(public_key_b64);
+  })
+  .catch(error => {
+    console.error('There was an error!', error);
+  });
+  const sender = new MlKem512()
+  const [ciphertext, shared_secret] = await sender.encap(pk);
+
+  const ciphertext_b64 = uint8ArrayToBase64(ciphertext);
+}
 
 async function connectSerial() { // Connect to ESP32 (cu.wchuusbserial)
   console.log("connectSerial called");
