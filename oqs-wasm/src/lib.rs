@@ -1,4 +1,4 @@
-use oqs::{ffi::kem::{OQS_KEM_kyber_512_encaps, OQS_KEM_kyber_512_length_ciphertext, OQS_KEM_kyber_512_length_shared_secret}, *};
+use kyberlib::wasm::*;
 use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
 use base64::prelude::*;
@@ -34,11 +34,15 @@ pub fn generate_shared_secret(data: &JsValue) -> JsValue {
     let decoded_pk: Vec<u8> = BASE64_STANDARD.decode(input.public_key_b64.clone()).unwrap();
 
     // Create ciphertext and shared_secret arrays
-    let mut ciphertext: Vec<u8> = vec![0; OQS_KEM_kyber_512_length_ciphertext as usize];
-    let mut shared_secret: Vec<u8> = vec![0; OQS_KEM_kyber_512_length_shared_secret as usize];
-    unsafe {
-        OQS_KEM_kyber_512_encaps(ciphertext.as_mut_ptr(), shared_secret.as_mut_ptr(), decoded_pk.as_ptr());
-    }
+    let result: Kex = match encapsulate(decoded_pk.into_boxed_slice()) {
+        Ok(result) => result,
+        Err(e) => {
+            alert(&format!("Encapsulation error: {:?}", e));
+            return JsValue::NULL;
+        }
+    };
+    let ciphertext = result.ciphertext();
+    let shared_secret = result.sharedSecret();
 
     let ciphertext_b64: String = BASE64_STANDARD.encode(ciphertext);
     let shared_secret_b64: String = BASE64_STANDARD.encode(shared_secret);
