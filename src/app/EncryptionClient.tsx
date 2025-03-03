@@ -1,8 +1,17 @@
 import axios from 'axios';
 import { MlKem512 } from 'mlkem';
 import { v4 as uuidv4 } from 'uuid';
+import { gcm } from '@noble/ciphers/aes';
+import { utf8ToBytes } from '@noble/ciphers/utils';
+import { randomBytes } from '@noble/ciphers/webcrypto';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+type EncryptedData = {
+    ciphertext_b64: string,
+    client_id: string,
+    nonce_b64: string
+}
 
 export class EncryptionClient {
     CLIENT_ID: string;
@@ -63,4 +72,19 @@ export class EncryptionClient {
 
         return shared_secret;
     }
+
+    encryptData(data: string): EncryptedData {
+        const key = this.SHARED_SECRET;
+        const nonce = randomBytes(24);
+        const bytes = utf8ToBytes(data);
+        const aes = gcm(key, nonce);
+        const ciphertext = aes.encrypt(bytes);
+
+        return {
+            ciphertext_b64: this.uint8ArrayToBase64(ciphertext),
+            nonce_b64: this.uint8ArrayToBase64(nonce),
+            client_id: this.CLIENT_ID
+        }
+    }
+
 }
