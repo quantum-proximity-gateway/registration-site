@@ -95,7 +95,7 @@ export default function Home() {
 
   function handleRegister() {
     if (mac_address == "") {
-      alert("MAC Address is empty. Please connect your ESP32 key to your laptop.");
+      alert("MAC Address is empty. Please connect your ESP32 key to your device.");
       return;
     }
     let plaintext = {
