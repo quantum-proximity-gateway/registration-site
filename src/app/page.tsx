@@ -77,6 +77,12 @@ export default function Home() {
 
   const [currentAlert, setCurrentAlert] = useState<AlertType | null>(null);
 
+  type RegisterResponse = {
+    status_code: number,
+    status: string,
+    key: string // To be used for TOTP
+  }
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsFading(true);
@@ -96,6 +102,8 @@ export default function Home() {
 
     let data = encryptionClient.encryptData(JSON.stringify(plaintext));
     axios.post(`${API_URL}/register`, data).then((res) => {
+      let decrypted_data: RegisterResponse = JSON.parse(encryptionClient.decryptData(res.data));
+      // TODO: Implement TOTP via Serial write
       setAlertClass('fadeIn');
       setCurrentAlert({status: "success", title: "Device registered"});
       router.push(`/registerFace?mac_address=${mac_address}`);
