@@ -10,8 +10,10 @@ import { useState, useEffect } from "react";
 import '@fontsource/ibm-plex-sans';
 import axios from 'axios';
 import { useRouter } from 'next/navigation'
-
+import { EncryptionClient } from "./EncryptionClient";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+const encryptionClient = new EncryptionClient();
 
 async function connectSerial() { // Connect to ESP32 (cu.wchuusbserial)
   console.log("connectSerial called");
@@ -75,6 +77,12 @@ export default function Home() {
 
   const [currentAlert, setCurrentAlert] = useState<AlertType | null>(null);
 
+  type RegisterResponse = {
+    status_code: number,
+    status: string,
+    key: string // To be used for TOTP
+  }
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsFading(true);
@@ -86,14 +94,24 @@ export default function Home() {
   }, []);
 
   function handleRegister() {
-    axios.post(`${API_URL}/register`, {
+    if (mac_address == "") {
+      alert("MAC Address is empty. Please connect your ESP32 key to your device.");
+      return;
+    }
+    let plaintext = {
       mac_address,
       username,
       password
-    }).then((res) => {
+    }
+
+    let data = encryptionClient.encryptData(JSON.stringify(plaintext));
+    axios.post(`${API_URL}/register`, data).then((res) => {
+      let decrypted_data: RegisterResponse = JSON.parse(encryptionClient.decryptData(res.data));
+      // TODO: Implement TOTP via Serial write
       setAlertClass('fadeIn');
       setCurrentAlert({status: "success", title: "Device registered"});
       router.push(`/registerFace?mac_address=${mac_address}`);
+    
     }).catch((err) => {
       console.log(err)
       if (err.response.status == 409) {
