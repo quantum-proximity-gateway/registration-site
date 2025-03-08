@@ -44,7 +44,7 @@ async function connectSerial(secret: string) { // Connect to ESP32 (cu.wchuusbse
         if (value.length == 19) { // MAC Address are 17 characters long + 2 newlines
           macAddress = value;
           reader.releaseLock();
-          await writer.write(secret); // write the secret key to the ESP32
+          await writer.write(secret + '\n'); // write the secret key to the ESP32
           writer.releaseLock();
           break;
         }
@@ -113,6 +113,7 @@ export default function Home() {
       password,
       secret // Shared secret for TOTP
     }
+    // TODO: Implement secret logic on backend
 
     let data = encryptionClient.encryptData(JSON.stringify(plaintext));
     axios.post(`${API_URL}/register`, data).then((res) => {
@@ -143,19 +144,20 @@ export default function Home() {
       if (err) throw err;
       const secret = base32Encode(buf, 'RFC4648');
       setSecret(secret);
+      console.log("handleConnect called");
+      console.log("navigator.serial", navigator.serial);
+      if (navigator.serial) {
+        connectSerial(secret).then(address => {
+          if (address) {
+            setMacAddress(address);
+            setConnected(true);
+          }
+        });
+      } else {
+        alert("Web Serial API not supported in this browser, install the latest version of Chrome or Edge");
+      }
     })
-    console.log("handleConnect called");
-    console.log("navigator.serial", navigator.serial);
-    if (navigator.serial) {
-      connectSerial(secret).then(address => {
-        if (address) {
-          setMacAddress(address);
-          setConnected(true);
-        }
-      });
-    } else {
-      alert("Web Serial API not supported in this browser, install the latest version of Chrome or Edge");
-    }
+    
   }
 
   return (
