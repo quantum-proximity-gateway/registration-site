@@ -22,7 +22,10 @@ async function connectSerial() { // Connect to ESP32 (cu.wchuusbserial)
   try {
     const port = await navigator.serial.requestPort();
     await port.open({ baudRate: 9600 });
-    
+    const textEncoder = new TextEncoderStream();
+    const writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
+    const writer = textEncoder.writable.getWriter();
+
     const decoder = new TextDecoderStream(); // Decodes incoming data from ESP32
     port.readable.pipeTo(decoder.writable);
 
@@ -37,6 +40,8 @@ async function connectSerial() { // Connect to ESP32 (cu.wchuusbserial)
         if (value.length == 19) { // MAC Address are 17 characters long + 2 newlines
           macAddress = value;
           reader.releaseLock();
+          await writer.write("hey"); // write the secret key to the ESP32
+          writer.releaseLock();
           break;
         }
       } else {
