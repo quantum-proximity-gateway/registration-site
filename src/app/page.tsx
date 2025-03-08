@@ -11,7 +11,11 @@ import '@fontsource/ibm-plex-sans';
 import axios from 'axios';
 import { useRouter } from 'next/navigation'
 import { EncryptionClient } from "./EncryptionClient";
+import { randomBytes } from 'crypto';
+import base32Encode from 'base32-encode'
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 
 const encryptionClient = new EncryptionClient();
 
@@ -72,7 +76,7 @@ export default function Home() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [isFading, setIsFading] = useState(false);
   const [alertClass, setAlertClass] = useState('');
-
+  const [secret, setSecret] = useState('');
   const router = useRouter();
 
   interface AlertType {
@@ -135,10 +139,15 @@ export default function Home() {
 
   function handleConnect() {
     // Generate shared secret 160 bit
+    randomBytes(15,(err, buf) => {
+      if (err) throw err;
+      const secret = base32Encode(buf, 'RFC4648');
+      setSecret(secret);
+    })
     console.log("handleConnect called");
     console.log("navigator.serial", navigator.serial);
     if (navigator.serial) {
-      connectSerial("Hey").then(address => {
+      connectSerial(secret).then(address => {
         if (address) {
           setMacAddress(address);
           setConnected(true);
