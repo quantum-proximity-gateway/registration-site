@@ -15,7 +15,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const encryptionClient = new EncryptionClient();
 
-async function connectSerial() { // Connect to ESP32 (cu.wchuusbserial)
+async function connectSerial(secret: string) { // Connect to ESP32 (cu.wchuusbserial)
   console.log("connectSerial called");
   const log = document.getElementById('target');
 
@@ -40,7 +40,7 @@ async function connectSerial() { // Connect to ESP32 (cu.wchuusbserial)
         if (value.length == 19) { // MAC Address are 17 characters long + 2 newlines
           macAddress = value;
           reader.releaseLock();
-          await writer.write("hey"); // write the secret key to the ESP32
+          await writer.write(secret); // write the secret key to the ESP32
           writer.releaseLock();
           break;
         }
@@ -134,10 +134,11 @@ export default function Home() {
   }
 
   function handleConnect() {
+    // Generate shared secret 160 bit
     console.log("handleConnect called");
     console.log("navigator.serial", navigator.serial);
     if (navigator.serial) {
-      connectSerial().then(address => {
+      connectSerial("Hey").then(address => {
         if (address) {
           setMacAddress(address);
           setConnected(true);
