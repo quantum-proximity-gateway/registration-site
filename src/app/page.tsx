@@ -110,13 +110,13 @@ export default function Home() {
     let plaintext = {
       mac_address,
       username,
-      password
+      password,
+      secret // Shared secret for TOTP
     }
 
     let data = encryptionClient.encryptData(JSON.stringify(plaintext));
     axios.post(`${API_URL}/register`, data).then((res) => {
       let decrypted_data: RegisterResponse = JSON.parse(encryptionClient.decryptData(res.data));
-      // TODO: Implement TOTP via Serial write
       setAlertClass('fadeIn');
       setCurrentAlert({status: "success", title: "Device registered"});
       router.push(`/registerFace?mac_address=${mac_address}`);
