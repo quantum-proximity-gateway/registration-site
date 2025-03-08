@@ -139,7 +139,7 @@ export default function Home() {
 
   function handleConnect() {
     // Generate shared secret 160 bit
-    randomBytes(15,(err, buf) => {
+    randomBytes(20,(err, buf) => {
       if (err) throw err;
       const secret = base32Encode(buf, 'RFC4648');
       setSecret(secret);
