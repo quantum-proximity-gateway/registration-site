@@ -11,23 +11,31 @@ import '@fontsource/ibm-plex-sans';
 import axios from 'axios';
 import { useRouter } from 'next/navigation'
 import { EncryptionClient } from "./EncryptionClient";
+import { randomBytes } from 'crypto';
+import base32Encode from 'base32-encode'
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 
 const encryptionClient = new EncryptionClient();
 
-async function connectSerial() { // Connect to ESP32 (cu.wchuusbserial)
+async function connectSerial(secret: string): Promise<[string, number]> { // Connect to ESP32 (cu.wchuusbserial)
   console.log("connectSerial called");
   const log = document.getElementById('target');
 
   try {
     const port = await navigator.serial.requestPort();
     await port.open({ baudRate: 9600 });
-    
+    const textEncoder = new TextEncoderStream();
+    const writableStreamClosed = textEncoder.readable.pipeTo(port.writable);
+    const writer = textEncoder.writable.getWriter();
+
     const decoder = new TextDecoderStream(); // Decodes incoming data from ESP32
     port.readable.pipeTo(decoder.writable);
 
     const reader = decoder.readable.getReader();
     let macAddress = "";
+    let current_time = 0;
 
     while (true) {
       const { value, done } = await reader.read();
@@ -37,6 +45,9 @@ async function connectSerial() { // Connect to ESP32 (cu.wchuusbserial)
         if (value.length == 19) { // MAC Address are 17 characters long + 2 newlines
           macAddress = value;
           reader.releaseLock();
+          current_time = Date.now();
+          await writer.write(secret + '\n'); // write the secret key to the ESP32
+          writer.releaseLock();
           break;
         }
       } else {
@@ -52,10 +63,11 @@ async function connectSerial() { // Connect to ESP32 (cu.wchuusbserial)
       }
     }
 
-    return macAddress;
+    return [macAddress, current_time];
 
   } catch (error) {
     console.error('There was an error reading the data:', error);
+    return ["", 0]; // Return default values in case of error
   }
 }
 
@@ -67,7 +79,8 @@ export default function Home() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [isFading, setIsFading] = useState(false);
   const [alertClass, setAlertClass] = useState('');
-
+  const [secret, setSecret] = useState('');
+  const [timestamp, setTimestamp] = useState(0);
   const router = useRouter();
 
   interface AlertType {
@@ -101,13 +114,14 @@ export default function Home() {
     let plaintext = {
       mac_address,
       username,
-      password
+      password,
+      secret, // Shared secret for TOTP
+      timestamp
     }
 
     let data = encryptionClient.encryptData(JSON.stringify(plaintext));
     axios.post(`${API_URL}/register`, data).then((res) => {
       let decrypted_data: RegisterResponse = JSON.parse(encryptionClient.decryptData(res.data));
-      // TODO: Implement TOTP via Serial write
       setAlertClass('fadeIn');
       setCurrentAlert({status: "success", title: "Device registered"});
       router.push(`/registerFace?mac_address=${mac_address}`);
@@ -129,18 +143,29 @@ export default function Home() {
   }
 
   function handleConnect() {
-    console.log("handleConnect called");
-    console.log("navigator.serial", navigator.serial);
-    if (navigator.serial) {
-      connectSerial().then(address => {
-        if (address) {
-          setMacAddress(address);
-          setConnected(true);
-        }
-      });
-    } else {
-      alert("Web Serial API not supported in this browser, install the latest version of Chrome or Edge");
-    }
+    // Generate shared secret 160 bit
+    randomBytes(20,(err, buf) => {
+      if (err) throw err;
+      console.log("handleConnect called");
+      console.log("navigator.serial", navigator.serial);
+      if (navigator.serial) {
+        const secret = base32Encode(buf, 'RFC4648');
+        setSecret(secret);
+        connectSerial(secret).then((result) => {
+          if (result) {
+            const [address, current_time] = result;
+            if (address) {
+              setMacAddress(address);
+              setConnected(true);
+              setTimestamp(current_time)
+            }
+          }
+        });
+      } else {
+        alert("Web Serial API not supported in this browser, install the latest version of Chrome or Edge");
+      }
+    })
+    
   }
 
   return (
