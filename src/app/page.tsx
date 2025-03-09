@@ -19,7 +19,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const encryptionClient = new EncryptionClient();
 
-async function connectSerial(secret: string) { // Connect to ESP32 (cu.wchuusbserial)
+async function connectSerial(secret: string): Promise<[string, number]> { // Connect to ESP32 (cu.wchuusbserial)
   console.log("connectSerial called");
   const log = document.getElementById('target');
 
@@ -35,6 +35,7 @@ async function connectSerial(secret: string) { // Connect to ESP32 (cu.wchuusbse
 
     const reader = decoder.readable.getReader();
     let macAddress = "";
+    let current_time = 0;
 
     while (true) {
       const { value, done } = await reader.read();
@@ -44,6 +45,7 @@ async function connectSerial(secret: string) { // Connect to ESP32 (cu.wchuusbse
         if (value.length == 19) { // MAC Address are 17 characters long + 2 newlines
           macAddress = value;
           reader.releaseLock();
+          current_time = Date.now();
           await writer.write(secret + '\n'); // write the secret key to the ESP32
           writer.releaseLock();
           break;
@@ -61,10 +63,11 @@ async function connectSerial(secret: string) { // Connect to ESP32 (cu.wchuusbse
       }
     }
 
-    return macAddress;
+    return [macAddress, current_time];
 
   } catch (error) {
     console.error('There was an error reading the data:', error);
+    return ["", 0]; // Return default values in case of error
   }
 }
 
@@ -77,6 +80,7 @@ export default function Home() {
   const [isFading, setIsFading] = useState(false);
   const [alertClass, setAlertClass] = useState('');
   const [secret, setSecret] = useState('');
+  const [timestamp, setTimestamp] = useState(0);
   const router = useRouter();
 
   interface AlertType {
@@ -111,9 +115,9 @@ export default function Home() {
       mac_address,
       username,
       password,
-      secret // Shared secret for TOTP
+      secret, // Shared secret for TOTP
+      timestamp
     }
-    // TODO: Implement secret logic on backend
 
     let data = encryptionClient.encryptData(JSON.stringify(plaintext));
     axios.post(`${API_URL}/register`, data).then((res) => {
@@ -142,15 +146,19 @@ export default function Home() {
     // Generate shared secret 160 bit
     randomBytes(20,(err, buf) => {
       if (err) throw err;
-      const secret = base32Encode(buf, 'RFC4648');
-      setSecret(secret);
       console.log("handleConnect called");
       console.log("navigator.serial", navigator.serial);
       if (navigator.serial) {
-        connectSerial(secret).then(address => {
-          if (address) {
-            setMacAddress(address);
-            setConnected(true);
+        const secret = base32Encode(buf, 'RFC4648');
+        setSecret(secret);
+        connectSerial(secret).then((result) => {
+          if (result) {
+            const [address, current_time] = result;
+            if (address) {
+              setMacAddress(address);
+              setConnected(true);
+              setTimestamp(current_time)
+            }
           }
         });
       } else {
