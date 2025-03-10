@@ -70,7 +70,7 @@ const RegisterFace = () => {
       formData.append('mac_address', mac_address as string);
   
       try {
-        const response = await axios.post('http://127.0.0.1:8000/registration/faceRec', formData, {
+        const response = await axios.post('http://127.0.0.1:8000/register/face', formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
           }
