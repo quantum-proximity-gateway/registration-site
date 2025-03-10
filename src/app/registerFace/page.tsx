@@ -1,93 +1,93 @@
 'use client'
 
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import  {Button, Text, Box} from "@chakra-ui/react";
+import { Button, Text, Box } from "@chakra-ui/react";
 import axios from 'axios';
 
-const RegisterFace = () => {
-    const searchParams = useSearchParams();
-    const mac_address = searchParams.get('mac_address'); // Read mac_address from URL parameters
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const [countdown, setCountdown] = useState(0);
-    const [record, setRecord] = useState(false);
-    const [recorded, setRecorded] = useState(false);
-    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-    const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
+// Create a separate component that uses useSearchParams
+const RegisterFaceContent = () => {
+  const searchParams = useSearchParams();
+  const mac_address = searchParams.get('mac_address'); // Read mac_address from URL parameters
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [countdown, setCountdown] = useState(0);
+  const [record, setRecord] = useState(false);
+  const [recorded, setRecorded] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
 
+  // Final animation
+  const [showGoodbye, setShowGoodbye] = useState(false);
 
-    // Final animation
-    const [showGoodbye, setShowGoodbye] = useState(false);
+  useEffect(() => {
+      if (!record) return;
 
-    useEffect(() => {
-        if (!record) return;
-
-        const getVideo = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-            }
-
-            const recorder = new MediaRecorder(stream);
-            const chunks: BlobPart[] = [];
-            recorder.ondataavailable = (event) => {
-              chunks.push(event.data);
-            };
-            recorder.onstop = () => {
-              const blob = new Blob(chunks, { type: 'video/webm' });
-              setVideoBlob(blob);
-              stream.getTracks().forEach(track => track.stop());
-            };
-            recorder.start();
-
-            setMediaRecorder(recorder);
-
-            const countdownInterval = setInterval(() => {
-                setCountdown(prevCountdown => {
-                if (prevCountdown <= 1) {
-                    clearInterval(countdownInterval);
-                    stream.getTracks().forEach(track => track.stop());
-                    setRecord(false);
-                    setRecorded(true);
-                }
-                return prevCountdown - 1;
-                });
-            }, 1000);
-        } catch (err) {
-            console.error("Error accessing webcam: ", err);
-        }
-        };
-
-        getVideo();
-    }, [record]);
-
-    const handleSubmit = async () => {
-      if (!videoBlob) return;
-  
-      const formData = new FormData();
-      formData.append('video', videoBlob, 'recorded-video.webm');
-      formData.append('mac_address', mac_address as string);
-  
+      const getVideo = async () => {
       try {
-        const response = await axios.post('http://127.0.0.1:8000/register/face', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          if (videoRef.current) {
+          videoRef.current.srcObject = stream;
           }
-        });
-  
-        if (response.status === 201) {
-          console.log('Video uploaded successfully');
-          setShowGoodbye(true);
-        } else {
-          console.error('Failed to upload video');
-        }
-      } catch (error) {
-        console.error('Error uploading video:', error);
-      }
-    };
 
-    return (
+          const recorder = new MediaRecorder(stream);
+          const chunks: BlobPart[] = [];
+          recorder.ondataavailable = (event) => {
+            chunks.push(event.data);
+          };
+          recorder.onstop = () => {
+            const blob = new Blob(chunks, { type: 'video/webm' });
+            setVideoBlob(blob);
+            stream.getTracks().forEach(track => track.stop());
+          };
+          recorder.start();
+
+          setMediaRecorder(recorder);
+
+          const countdownInterval = setInterval(() => {
+              setCountdown(prevCountdown => {
+              if (prevCountdown <= 1) {
+                  clearInterval(countdownInterval);
+                  stream.getTracks().forEach(track => track.stop());
+                  setRecord(false);
+                  setRecorded(true);
+              }
+              return prevCountdown - 1;
+              });
+          }, 1000);
+      } catch (err) {
+          console.error("Error accessing webcam: ", err);
+      }
+      };
+
+      getVideo();
+  }, [record]);
+
+  const handleSubmit = async () => {
+    if (!videoBlob) return;
+
+    const formData = new FormData();
+    formData.append('video', videoBlob, 'recorded-video.webm');
+    formData.append('mac_address', mac_address as string);
+
+    try {
+      const response = await axios.post('http://127.0.0.1:8000/register/face', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.status === 201) {
+        console.log('Video uploaded successfully');
+        setShowGoodbye(true);
+      } else {
+        console.error('Failed to upload video');
+      }
+    } catch (error) {
+      console.error('Error uploading video:', error);
+    }
+  };
+
+  return (
     <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" height="100vh" fontFamily="IBM Plex Sans, sans-serif">
 
       {showGoodbye && (
@@ -136,7 +136,16 @@ const RegisterFace = () => {
       )}
       {countdown > 0 ? <Text as="h2" fontSize="xl">{countdown}</Text> : null}
     </Box>
-    );
-    };
+  );
+};
 
-    export default RegisterFace;
+// Main component that wraps the content in Suspense
+const RegisterFace = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RegisterFaceContent />
+    </Suspense>
+  );
+};
+
+export default RegisterFace;
