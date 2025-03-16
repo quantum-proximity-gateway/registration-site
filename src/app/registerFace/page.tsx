@@ -15,7 +15,7 @@ const RegisterFaceContent = () => {
   const [recorded, setRecorded] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [videoBlob, setVideoBlob] = useState<Blob | null>(null);
-
+  const [uploading, setUploading] = useState<boolean>(false);
   // Final animation
   const [showGoodbye, setShowGoodbye] = useState(false);
 
@@ -65,6 +65,7 @@ const RegisterFaceContent = () => {
   const handleSubmit = async () => {
     if (!videoBlob) return;
 
+    setUploading(true);
     const formData = new FormData();
     formData.append('video', videoBlob, 'recorded-video.webm');
     formData.append('mac_address', mac_address as string);
@@ -78,6 +79,7 @@ const RegisterFaceContent = () => {
 
       if (response.status === 201) {
         console.log('Video uploaded successfully');
+        setUploading(false);
         setShowGoodbye(true);
       } else {
         console.error('Failed to upload video');
@@ -130,6 +132,12 @@ const RegisterFaceContent = () => {
           </Button>
           </>
           ) : <></>}
+          {uploading ? (
+            <Box display="flex" flexDirection="column" alignItems="center" mt={4}>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-500 mb-2"></div>
+              <Text>Uploading video...</Text>
+            </Box>
+          ): null}
         </>
       ) : (
         <video style={{ borderRadius: '10px', marginBottom: '16px' }} ref={videoRef} autoPlay />
