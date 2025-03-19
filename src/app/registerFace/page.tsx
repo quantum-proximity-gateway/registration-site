@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { Button, Text, Box } from "@chakra-ui/react";
 import axios from 'axios';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 // Create a separate component that uses useSearchParams
 const RegisterFaceContent = () => {
   const searchParams = useSearchParams();
@@ -71,7 +73,7 @@ const RegisterFaceContent = () => {
     formData.append('mac_address', mac_address as string);
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/register/face', formData, {
+      const response = await axios.post(`${API_URL}/register/face`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
