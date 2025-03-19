@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { Button, Text, Box } from "@chakra-ui/react";
 import axios from 'axios';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 // Create a separate component that uses useSearchParams
 const RegisterFaceContent = () => {
   const searchParams = useSearchParams();
