@@ -37,7 +37,7 @@ npm run dev
 
 - If you want to change the server URL, it is located in `.env.local`.
 
-- Instead of using the commands listed above individually, you can run `make dev` or `make build` from the root directory of this project to install the necessary packages and run/build the project.
+- Instead of using the commands listed above individually, you can run `make install` or `make run` to install the necessary packages and run the website.
 
 ## License
 
