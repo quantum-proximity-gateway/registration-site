@@ -198,10 +198,9 @@ export default function Home() {
         <Image 
           src="/icon.png" 
           alt="QPG Logo" 
-          width={100} 
-          height={100} 
-          style={{ filter: 'invert(100%)' }}
-          className="mb-4"
+          width={125}
+          height={125} 
+          className="mb-4 rounded-md"
         />
         <h1 className="text-4xl">Device Registration</h1>
       </div>
