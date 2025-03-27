@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation'
 import { EncryptionClient } from "./EncryptionClient";
 import { randomBytes } from 'crypto';
 import base32Encode from 'base32-encode'
+import Image from "next/image";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -193,7 +194,17 @@ export default function Home() {
       <div className="flex flex-col items-center justify-center min-h-screen py-2 fadeIn" style={{ fontFamily: 'IBM Plex Sans, sans-serif' }}>
 
       
-      <h1 className="text-4xl">Device Registration</h1>
+      <div className="flex flex-col items-center justify-center">
+        <Image 
+          src="/icon.png" 
+          alt="QPG Logo" 
+          width={100} 
+          height={100} 
+          style={{ filter: 'invert(100%)' }}
+          className="mb-4"
+        />
+        <h1 className="text-4xl">Device Registration</h1>
+      </div>
       <Stack className="sm:p-20">
         {/* MAC address is read-only, so we can turn off autocomplete */}
         <Input
